@@ -245,7 +245,7 @@ a {
   --bs-bg-opacity: 0.1;
 }
 
-/* end of Bootstrap Color Theme */
+/* end of Bootstrap Color Theme 
 @media (min-width: 1200px) {
 
   .container,
@@ -255,7 +255,45 @@ a {
   .container-xl {
     max-width: 1440px;
   }
+}*/
+
+@media (min-width: 1200px) {
+  .container,
+  .container-lg,
+  .container-md,
+  .container-sm,
+  .container-xl {
+    max-width: 1440px; /* Sets the maximum width to 1440px for larger screens */
+  }
 }
+
+/* Add this section for mobile responsiveness */
+@media (max-width: 1199px) {
+  .container,
+  .container-lg,
+  .container-md,
+  .container-sm,
+  .container-xl {
+    max-width: 100%; /* Allow full-width containers on smaller screens */
+    padding: 0 15px; /* Add some padding for better spacing */
+  }
+  
+  /* Adjust font sizes for smaller screens */
+  h1 {
+    font-size: 1.5em; /* Smaller header size */
+  }
+  
+  p {
+    font-size: 1em; /* Adjust paragraph size */
+  }
+  
+  /* Adjust image sizes */
+  .image img {
+    width: 100%; /* Images should take full width */
+    height: auto; /* Maintain aspect ratio */
+  }
+}
+
 
 /* one page menu */
 #one-page-menu .nav-link {
