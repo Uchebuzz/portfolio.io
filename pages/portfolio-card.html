@@ -1,0 +1,143 @@
+﻿<!--
+  PORTFOLIO CARD — drop into your /work or /projects grid.
+  Designed to live alongside the case study page at /work/email-triage-agent.
+  Inherits the same paper/ink/forest/amber palette as case-study.html.
+-->
+<style>
+  .pf-card {
+    --paper:     #F4EFE6;
+    --paper-warm:#ECE5D5;
+    --ink:       #14110F;
+    --ink-soft:  #3A3530;
+    --ink-mute:  #7A7268;
+    --rule:      #C9C0AE;
+    --accent:    #1F4D46;
+    --amber:     #B8500E;
+    --hairline:  #D9D1BE;
+
+    display: block;
+    background: var(--paper);
+    border: 1px solid var(--hairline);
+    border-radius: 2px;
+    padding: 32px 32px 28px;
+    text-decoration: none;
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    max-width: 480px;
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s;
+    position: relative;
+    overflow: hidden;
+  }
+  .pf-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(at 90% 10%, rgba(31,77,70,0.05) 0%, transparent 50%);
+    pointer-events: none;
+  }
+  .pf-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--accent);
+    box-shadow: 0 12px 30px -16px rgba(31,77,70,0.25);
+  }
+
+  .pf-card__meta {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin-bottom: 28px;
+  }
+  .pf-card__meta .year { color: var(--amber); }
+
+  .pf-card__title {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: 28px;
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+    margin-bottom: 14px;
+  }
+  .pf-card__title em {
+    font-style: italic;
+    color: var(--accent);
+  }
+
+  .pf-card__blurb {
+    font-size: 15px;
+    line-height: 1.55;
+    color: var(--ink-soft);
+    margin-bottom: 24px;
+  }
+
+  .pf-card__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 20px;
+  }
+  .pf-card__tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    padding: 4px 10px;
+    border: 1px solid var(--accent);
+    border-radius: 999px;
+  }
+
+  .pf-card__footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-top: 16px;
+    border-top: 1px dashed var(--hairline);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+  .pf-card__arrow {
+    color: var(--accent);
+    font-size: 16px;
+    transition: transform 0.25s ease;
+  }
+  .pf-card:hover .pf-card__arrow {
+    transform: translateX(4px);
+  }
+</style>
+
+<a class="pf-card" href="case-study.html">
+  <div class="pf-card__meta">
+    <span>Case Study</span>
+    <span class="year">2026</span>
+  </div>
+
+  <h3 class="pf-card__title">
+    Email Triage Agent for a <em>law firm</em>
+  </h3>
+
+  <p class="pf-card__blurb">
+    Migrated a credit-bound, approval-gated AI email assistant onto a self-hosted
+    Microsoft 365 stack — two-stage classifier + drafter pipeline, ~$160/mo,
+    no per-draft bottleneck.
+  </p>
+
+  <div class="pf-card__tags">
+    <span class="pf-card__tag">Power Automate</span>
+    <span class="pf-card__tag">Azure OpenAI</span>
+    <span class="pf-card__tag">Graph API</span>
+  </div>
+
+  <div class="pf-card__footer">
+    <span>Legal · 21 days · Phase 1</span>
+    <span class="pf-card__arrow">→</span>
+  </div>
+</a>

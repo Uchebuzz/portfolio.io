@@ -1,0 +1,681 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Email Triage Agent — Case Study</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght,SOFT@9..144,300..900,0..100&family=DM+Sans:opsz,wght@9..40,300..700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper:        #F4EFE6;
+    --paper-warm:   #ECE5D5;
+    --ink:          #14110F;
+    --ink-soft:     #3A3530;
+    --ink-mute:     #7A7268;
+    --rule:         #C9C0AE;
+    --accent:       #1F4D46;  /* deep forest */
+    --accent-soft:  #2E6A60;
+    --amber:        #B8500E;  /* burnt amber */
+    --hairline:     #D9D1BE;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 17px;
+    line-height: 1.65;
+    font-feature-settings: 'ss01', 'cv11';
+    background-image:
+      radial-gradient(at 8% 12%, rgba(31,77,70,0.04) 0%, transparent 40%),
+      radial-gradient(at 92% 88%, rgba(184,80,14,0.04) 0%, transparent 45%);
+    min-height: 100vh;
+  }
+
+  /* ===== Layout ===== */
+  .wrap {
+    max-width: 1180px;
+    margin: 0 auto;
+    padding: 0 48px;
+  }
+
+  /* ===== Top bar ===== */
+  .topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 32px 0 0;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+  .topbar .crumb { color: var(--ink); }
+  .topbar a { color: var(--ink-mute); text-decoration: none; border-bottom: 1px solid transparent; transition: border-color 0.2s; }
+  .topbar a:hover { border-bottom-color: var(--ink-mute); }
+
+  /* ===== Hero ===== */
+  .hero {
+    padding: 80px 0 56px;
+    border-bottom: 1px solid var(--rule);
+    margin-bottom: 72px;
+  }
+
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 28px;
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .eyebrow::before {
+    content: '';
+    width: 24px;
+    height: 1px;
+    background: var(--amber);
+  }
+
+  h1.title {
+    font-family: 'Fraunces', serif;
+    font-weight: 350;
+    font-size: clamp(42px, 6vw, 78px);
+    line-height: 1.02;
+    letter-spacing: -0.025em;
+    color: var(--ink);
+    max-width: 14ch;
+    margin-bottom: 36px;
+    font-variation-settings: "SOFT" 50, "opsz" 144;
+  }
+  h1.title em {
+    font-style: italic;
+    color: var(--accent);
+    font-variation-settings: "SOFT" 100, "opsz" 144;
+  }
+
+  .lede {
+    font-family: 'Fraunces', serif;
+    font-weight: 350;
+    font-size: clamp(20px, 2vw, 24px);
+    line-height: 1.45;
+    color: var(--ink-soft);
+    max-width: 60ch;
+  }
+
+  /* ===== Meta grid ===== */
+  .meta {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 32px;
+    margin-top: 64px;
+    padding-top: 32px;
+    border-top: 1px solid var(--hairline);
+  }
+  .meta-cell .label {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    margin-bottom: 8px;
+    display: block;
+  }
+  .meta-cell .value {
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    font-weight: 400;
+    line-height: 1.3;
+    color: var(--ink);
+  }
+
+  /* ===== Section markers ===== */
+  .section {
+    margin-bottom: 88px;
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    gap: 48px;
+  }
+  .section-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 12px;
+    letter-spacing: 0.12em;
+    color: var(--accent);
+    padding-top: 6px;
+    position: sticky;
+    top: 32px;
+    align-self: start;
+    height: fit-content;
+  }
+  .section-num .dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--accent);
+    margin-right: 8px;
+    transform: translateY(-2px);
+  }
+
+  .section-body h2 {
+    font-family: 'Fraunces', serif;
+    font-weight: 400;
+    font-size: clamp(28px, 3.4vw, 40px);
+    line-height: 1.15;
+    letter-spacing: -0.015em;
+    color: var(--ink);
+    margin-bottom: 28px;
+    max-width: 22ch;
+  }
+
+  .section-body p {
+    max-width: 64ch;
+    margin-bottom: 20px;
+    color: var(--ink-soft);
+  }
+  .section-body p strong {
+    color: var(--ink);
+    font-weight: 600;
+  }
+
+  /* ===== Pull quote / friction list ===== */
+  .friction {
+    border-left: 2px solid var(--amber);
+    padding: 4px 0 4px 24px;
+    margin: 32px 0;
+    max-width: 60ch;
+  }
+  .friction-item {
+    margin-bottom: 18px;
+  }
+  .friction-item:last-child { margin-bottom: 0; }
+  .friction-item .head {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 6px;
+  }
+  .friction-item .body {
+    color: var(--ink);
+    font-size: 16px;
+  }
+
+  /* ===== Architecture diagram ===== */
+  .diagram-wrap {
+    margin: 40px 0;
+    padding: 40px;
+    background: var(--paper-warm);
+    border: 1px solid var(--hairline);
+    border-radius: 2px;
+    position: relative;
+  }
+  .diagram-wrap::before {
+    content: 'FIG.01 — PIPELINE';
+    position: absolute;
+    top: 16px;
+    right: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    color: var(--ink-mute);
+  }
+  .diagram-wrap svg { display: block; width: 100%; height: auto; max-width: 100%; }
+
+  /* ===== Results grid ===== */
+  .results {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    margin: 32px 0;
+    border-top: 1px solid var(--hairline);
+    border-bottom: 1px solid var(--hairline);
+  }
+  .result-cell {
+    padding: 28px 24px;
+    border-right: 1px solid var(--hairline);
+  }
+  .result-cell:last-child { border-right: none; }
+  .result-cell .figure {
+    font-family: 'Fraunces', serif;
+    font-weight: 300;
+    font-size: 48px;
+    line-height: 1;
+    color: var(--accent);
+    letter-spacing: -0.02em;
+    margin-bottom: 10px;
+    font-variation-settings: "opsz" 144;
+  }
+  .result-cell .figure .unit {
+    font-size: 22px;
+    color: var(--ink-mute);
+    margin-left: 4px;
+  }
+  .result-cell .desc {
+    font-size: 14px;
+    color: var(--ink-soft);
+    line-height: 1.45;
+  }
+
+  /* ===== Discovery callout ===== */
+  .discovery {
+    background: var(--paper-warm);
+    padding: 32px;
+    margin: 32px 0;
+    border-radius: 2px;
+    max-width: 64ch;
+  }
+  .discovery .tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 12px;
+  }
+  .discovery .body {
+    font-family: 'Fraunces', serif;
+    font-size: 18px;
+    line-height: 1.5;
+    color: var(--ink);
+    font-weight: 350;
+  }
+
+  /* ===== Stack list ===== */
+  .stack {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0;
+    margin-top: 28px;
+    max-width: 60ch;
+  }
+  .stack-item {
+    padding: 16px 0;
+    border-bottom: 1px solid var(--hairline);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+  }
+  .stack-item .name {
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    color: var(--ink);
+    font-size: 15px;
+  }
+  .stack-item .role {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+    text-align: right;
+  }
+
+  /* ===== Highlights bulleted ===== */
+  ul.highlights {
+    list-style: none;
+    max-width: 64ch;
+    margin: 8px 0 24px;
+  }
+  ul.highlights li {
+    padding: 10px 0 10px 28px;
+    border-bottom: 1px dashed var(--hairline);
+    color: var(--ink-soft);
+    position: relative;
+    font-size: 15.5px;
+  }
+  ul.highlights li::before {
+    content: '→';
+    position: absolute;
+    left: 0;
+    color: var(--accent);
+    font-family: 'JetBrains Mono', monospace;
+  }
+  ul.highlights li:last-child { border-bottom: none; }
+  ul.highlights li strong { color: var(--ink); }
+
+  /* ===== Footer ===== */
+  footer {
+    margin-top: 96px;
+    padding: 48px 0 56px;
+    border-top: 1px solid var(--rule);
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--ink-mute);
+  }
+  footer a {
+    color: var(--ink);
+    text-decoration: none;
+    border-bottom: 1px solid var(--ink);
+    padding-bottom: 2px;
+  }
+
+  /* ===== Responsive ===== */
+  @media (max-width: 880px) {
+    .wrap { padding: 0 24px; }
+    .meta { grid-template-columns: repeat(2, 1fr); gap: 24px; }
+    .section { grid-template-columns: 1fr; gap: 16px; }
+    .section-num { position: static; }
+    .results { grid-template-columns: 1fr; }
+    .result-cell { border-right: none; border-bottom: 1px solid var(--hairline); }
+    .result-cell:last-child { border-bottom: none; }
+    .stack { grid-template-columns: 1fr; }
+    .diagram-wrap { padding: 24px 16px; }
+    footer { flex-direction: column; gap: 12px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- Top bar / breadcrumb -->
+  <nav class="topbar" aria-label="Breadcrumb">
+    <span class="crumb">UCHE BUZUGBE / WORK</span>
+    <a href="../index.html#works">← All projects</a>
+  </nav>
+
+  <!-- Hero -->
+  <header class="hero">
+    <span class="eyebrow">Case Study · 2026</span>
+    <h1 class="title">From per-draft approvals to <em>autonomous</em> email drafting.</h1>
+    <p class="lede">
+      I migrated a credit-bound, approval-gated AI email assistant into a self-hosted
+      Microsoft&nbsp;365 architecture — eliminating credit exhaustion and the
+      Slack-approval bottleneck for a California law firm.
+    </p>
+
+    <div class="meta">
+      <div class="meta-cell">
+        <span class="label">Client</span>
+        <!-- SWAP: replace with "Dahl Law Group" if you have permission to name -->
+        <span class="value">California law firm<br><span style="color:var(--ink-mute);font-size:14px;">(name on request)</span></span>
+      </div>
+      <div class="meta-cell">
+        <span class="label">Role</span>
+        <span class="value">Sole contractor — architecture, build, prompt engineering</span>
+      </div>
+      <div class="meta-cell">
+        <span class="label">Timeline</span>
+        <span class="value">Phase 1 · 21 days</span>
+      </div>
+      <div class="meta-cell">
+        <span class="label">Domain</span>
+        <span class="value">Legal / professional services</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== Section 01: Context ===== -->
+  <section class="section">
+    <div class="section-num"><span class="dot"></span>01 / CONTEXT</div>
+    <div class="section-body">
+      <h2>An AI assistant that worked — but couldn't scale.</h2>
+      <p>
+        The firm had an existing AI email assistant — internally named <strong>Viktor</strong> —
+        running inside a Slack channel. It worked: across 34 production runs it processed
+        350+ emails, classified them accurately, and drafted in the managing attorney's voice
+        using 14 documented behavioral rules.
+      </p>
+      <p>
+        But the operational model created two friction points the firm couldn't get past:
+      </p>
+
+      <div class="friction">
+        <div class="friction-item">
+          <div class="head">Friction 01 · Credit exhaustion</div>
+          <div class="body">Viktor consumed credits per execution and depleted three times in fourteen days, repeatedly halting automation.</div>
+        </div>
+        <div class="friction-item">
+          <div class="head">Friction 02 · Per-draft approval</div>
+          <div class="body">Every API action required manual approval inside Slack — creating a bottleneck that prevented rollout to additional attorneys and shared inboxes.</div>
+        </div>
+      </div>
+
+      <p>
+        The firm wanted an architecture they owned end-to-end, with predictable cost,
+        no per-draft approval, and a path to deploy across six+ mailboxes.
+      </p>
+    </div>
+  </section>
+
+  <!-- ===== Section 02: Discovery ===== -->
+  <section class="section">
+    <div class="section-num"><span class="dot"></span>02 / DISCOVERY</div>
+    <div class="section-body">
+      <h2>Before writing code, I rebuilt the rulebook.</h2>
+      <p>
+        I spent the first phase observing Viktor in production — analyzing 34 runs and
+        350+ emails — and extracted a 22-page knowledge document covering every rule,
+        edge case, tone sample, and routing decision the predecessor had accumulated.
+      </p>
+      <p>
+        This became the source-of-truth for the new system's prompts and routing logic.
+        It also surfaced the categories where the firm wanted AI to <em>never</em> draft —
+        opposing counsel, settlement discussions, court deadlines, IRS notices — high-risk
+        legal communications where wrong wording could waive privilege or create liability.
+      </p>
+
+      <div class="discovery">
+        <div class="tag">Artifact</div>
+        <div class="body">
+          A 22-page knowledge extraction document covering: 14 behavioral rules,
+          43 tone samples grouped by recipient type, 13 inbound email categories
+          with examples, and a 12-category Never-Auto-Draft list with risk-tiered
+          routing recommendations.
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Section 03: Architecture ===== -->
+  <section class="section">
+    <div class="section-num"><span class="dot"></span>03 / ARCHITECTURE</div>
+    <div class="section-body">
+      <h2>A two-stage AI pipeline, self-hosted inside the firm's tenant.</h2>
+      <p>
+        I evaluated two paths — <strong>Power Automate + Azure OpenAI</strong> versus
+        <strong>Copilot Studio + Power Automate</strong> — and recommended the first.
+        It eliminated the credit model that killed Viktor, kept all data inside the firm's
+        Microsoft tenant, and cost roughly $140/month less to operate.
+      </p>
+      <p>
+        Inbound mail is fetched every two hours during business hours via Microsoft Graph.
+        Each email runs through a <strong>classifier</strong> that assigns one of four routes,
+        and only the route requiring a reply hits the <strong>drafter</strong>. Prompts live in
+        SharePoint so the firm can edit behavior without touching the flow itself.
+      </p>
+
+      <div class="diagram-wrap">
+        <svg viewBox="0 0 900 380" xmlns="http://www.w3.org/2000/svg" aria-label="Pipeline architecture diagram">
+          <defs>
+            <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#1F4D46"/>
+            </marker>
+            <marker id="arrow-mute" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M 0 0 L 10 5 L 0 10 z" fill="#7A7268"/>
+            </marker>
+          </defs>
+
+          <!-- Stage labels at top -->
+          <text x="80" y="30" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="1.5" fill="#7A7268">FETCH</text>
+          <text x="250" y="30" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="1.5" fill="#7A7268">CLASSIFY</text>
+          <text x="520" y="30" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="1.5" fill="#7A7268">ROUTE</text>
+          <text x="760" y="30" font-family="JetBrains Mono, monospace" font-size="10" letter-spacing="1.5" fill="#7A7268">ACT</text>
+
+          <!-- Vertical separators -->
+          <line x1="200" y1="50" x2="200" y2="340" stroke="#D9C9A8" stroke-dasharray="2 4"/>
+          <line x1="450" y1="50" x2="450" y2="340" stroke="#D9C9A8" stroke-dasharray="2 4"/>
+          <line x1="680" y1="50" x2="680" y2="340" stroke="#D9C9A8" stroke-dasharray="2 4"/>
+
+          <!-- Stage 1: Inbox -->
+          <rect x="40" y="160" width="140" height="60" fill="#F4EFE6" stroke="#1F4D46" stroke-width="1.5" rx="2"/>
+          <text x="110" y="185" text-anchor="middle" font-family="Fraunces, serif" font-size="14" fill="#14110F">Graph API</text>
+          <text x="110" y="204" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="#7A7268">unread inbox</text>
+
+          <!-- Arrow to classifier -->
+          <line x1="180" y1="190" x2="240" y2="190" stroke="#1F4D46" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+          <!-- Stage 2: Classifier -->
+          <rect x="240" y="150" width="170" height="80" fill="#1F4D46" rx="2"/>
+          <text x="325" y="178" text-anchor="middle" font-family="Fraunces, serif" font-size="15" fill="#F4EFE6" font-weight="400">Classifier</text>
+          <text x="325" y="198" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#A8C5B8">GPT-4o</text>
+          <text x="325" y="214" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" fill="#A8C5B8">+ SharePoint prompt</text>
+
+          <!-- Arrow to switch -->
+          <line x1="410" y1="190" x2="475" y2="190" stroke="#1F4D46" stroke-width="1.5" marker-end="url(#arrow)"/>
+
+          <!-- Switch diamond -->
+          <polygon points="525,150 580,190 525,230 470,190" fill="none" stroke="#1F4D46" stroke-width="1.5"/>
+          <text x="525" y="185" text-anchor="middle" font-family="Fraunces, serif" font-size="12" fill="#14110F">4-way</text>
+          <text x="525" y="200" text-anchor="middle" font-family="Fraunces, serif" font-size="12" fill="#14110F">switch</text>
+
+          <!-- Four routes -->
+          <line x1="580" y1="170" x2="680" y2="90" stroke="#1F4D46" stroke-width="1.5" marker-end="url(#arrow)"/>
+          <line x1="585" y1="185" x2="680" y2="170" stroke="#7A7268" stroke-width="1.2" marker-end="url(#arrow-mute)"/>
+          <line x1="585" y1="195" x2="680" y2="230" stroke="#7A7268" stroke-width="1.2" marker-end="url(#arrow-mute)"/>
+          <line x1="580" y1="210" x2="680" y2="290" stroke="#7A7268" stroke-width="1.2" marker-end="url(#arrow-mute)"/>
+
+          <!-- Route boxes -->
+          <rect x="690" y="68" width="170" height="44" fill="#F4EFE6" stroke="#1F4D46" stroke-width="1.5" rx="2"/>
+          <text x="775" y="85" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" letter-spacing="1" fill="#1F4D46">DRAFT REPLY</text>
+          <text x="775" y="102" text-anchor="middle" font-family="Fraunces, serif" font-size="11" fill="#3A3530">→ Drafter (GPT-4o)</text>
+
+          <rect x="690" y="148" width="170" height="44" fill="#F4EFE6" stroke="#7A7268" rx="2"/>
+          <text x="775" y="165" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" letter-spacing="1" fill="#7A7268">DRAFT SPAM REPLY</text>
+          <text x="775" y="182" text-anchor="middle" font-family="Fraunces, serif" font-size="11" fill="#3A3530">→ Template insert</text>
+
+          <rect x="690" y="208" width="170" height="44" fill="#F4EFE6" stroke="#7A7268" rx="2"/>
+          <text x="775" y="225" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" letter-spacing="1" fill="#7A7268">FLAG + MARK READ</text>
+          <text x="775" y="242" text-anchor="middle" font-family="Fraunces, serif" font-size="11" fill="#3A3530">→ Human review</text>
+
+          <rect x="690" y="268" width="170" height="44" fill="#F4EFE6" stroke="#7A7268" rx="2"/>
+          <text x="775" y="285" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="9" letter-spacing="1" fill="#7A7268">MARK READ ONLY</text>
+          <text x="775" y="302" text-anchor="middle" font-family="Fraunces, serif" font-size="11" fill="#3A3530">→ Silent dismiss</text>
+
+          <!-- Footer note -->
+          <text x="450" y="360" text-anchor="middle" font-family="JetBrains Mono, monospace" font-size="10" fill="#7A7268">Recurrence: every 2h, Mon–Fri, 8a–4p PT  ·  Per-email processing  ·  Conversation dedup via state array</text>
+        </svg>
+      </div>
+
+      <p>
+        Critical design choices worth calling out:
+      </p>
+      <ul class="highlights">
+        <li><strong>Per-email processing</strong>, not batched — sidesteps Graph API mailbox concurrency limits and 408 timeouts.</li>
+        <li><strong>Conversation deduplication</strong> via a state array — prevents re-drafting on superseded threads.</li>
+        <li><strong>App-only auth</strong> via Azure App Registration — survives password changes and extends cleanly to additional mailboxes.</li>
+        <li><strong>Hardcoded never-draft rules</strong> for opposing counsel and other high-risk legal categories — defense-in-depth on top of the classifier.</li>
+        <li><strong>No auto-send, ever</strong> — every draft lands in Outlook for attorney review.</li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===== Section 04: Outcomes ===== -->
+  <section class="section">
+    <div class="section-num"><span class="dot"></span>04 / OUTCOMES</div>
+    <div class="section-body">
+      <h2>Predictable cost, autonomous operation, multi-mailbox path.</h2>
+
+      <div class="results">
+        <div class="result-cell">
+          <div class="figure">~$160<span class="unit">/mo</span></div>
+          <div class="desc">All-in operating cost. Pay-per-token Azure OpenAI replaces unpredictable credit drain.</div>
+        </div>
+        <div class="result-cell">
+          <div class="figure">0<span class="unit"></span></div>
+          <div class="desc">Per-draft approval steps. Autonomous classification and drafting; review happens in Outlook.</div>
+        </div>
+        <div class="result-cell">
+          <div class="figure">6+<span class="unit"></span></div>
+          <div class="desc">Mailboxes the architecture supports — attorney inboxes plus shared boxes (intake@, info@, billing@).</div>
+        </div>
+      </div>
+
+      <p>
+        Beyond the numbers, the deliverable the firm cares about most is <strong>ownership</strong>:
+        the flow, the prompts, the templates, and the documentation all live in their tenant and SharePoint.
+        Nothing is locked behind a vendor's credit ledger.
+      </p>
+    </div>
+  </section>
+
+  <!-- ===== Section 05: Stack ===== -->
+  <section class="section">
+    <div class="section-num"><span class="dot"></span>05 / STACK</div>
+    <div class="section-body">
+      <h2>Built on the Microsoft stack the firm already lives in.</h2>
+      <div class="stack">
+        <div class="stack-item">
+          <span class="name">Power Automate (Premium)</span>
+          <span class="role">Orchestration</span>
+        </div>
+        <div class="stack-item">
+          <span class="name">Azure OpenAI · GPT-4o</span>
+          <span class="role">Classification + drafting</span>
+        </div>
+        <div class="stack-item">
+          <span class="name">Microsoft Graph API</span>
+          <span class="role">Mailbox read/write</span>
+        </div>
+        <div class="stack-item">
+          <span class="name">SharePoint Online</span>
+          <span class="role">Prompt + template library</span>
+        </div>
+        <div class="stack-item">
+          <span class="name">Azure App Registration</span>
+          <span class="role">Client-credentials auth</span>
+        </div>
+        <div class="stack-item">
+          <span class="name">HTML / CSS templates</span>
+          <span class="role">Signature + spam reply</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== Section 06: Reflection ===== -->
+  <section class="section">
+    <div class="section-num"><span class="dot"></span>06 / REFLECTION</div>
+    <div class="section-body">
+      <h2>What this project taught me.</h2>
+      <p>
+        Most of the value in this engagement wasn't the code — it was the discovery work that
+        translated a working-but-fragile predecessor into a documented set of rules the new
+        system could inherit. The classifier is only as good as the categories you give it,
+        and the drafter is only as good as the tone samples behind it.
+      </p>
+      <p>
+        The second lesson: in regulated domains, the most important architectural decision
+        is what the AI <em>doesn't</em> do. Opposing counsel, settlement, court deadlines —
+        these never get a draft. Defense-in-depth at the routing layer matters more than
+        prompt cleverness.
+      </p>
+    </div>
+  </section>
+
+  <footer>
+    <span>Uchechukwu Buzugbe · AI Automation</span>
+    <a href="mailto:hello@example.com">Get in touch →</a>
+  </footer>
+
+</div>
+
+</body>
+</html>
